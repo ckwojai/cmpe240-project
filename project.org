@@ -1,0 +1,21 @@
+#+TITLE: Project
+* Resource
+- [[https://forums.developer.nvidia.com/t/driving-an-adafruit-2-8-with-a-jetson-nano/72847/4][Driving an Adafruit 2.8 with a Jetson Nano]]
+- [[https://forums.developer.nvidia.com/t/spi-st7735-1-44-display/159280][SPI ST7735 1.44” display]]
+- [[https://www.jetsonhacks.com/2020/05/04/spi-on-jetson-using-jetson-io/][SPI on Jetson – Using Jetson-IO]]
+- [[https://learn.adafruit.com/1-8-tft-display/downloads][1.8" TFT Display Breakout and Shield -> Downloads]]
+-
+-
+* BOM
+- 78XX Linear Voltage Regulator
+- Capactior: 4.7 uF
+- LED
+- 330ohm resistor
+- 1.8 SPI TFT Display (ST7735R by Adafruit)
+- 28 Gauge wire
+- 3-pin-2-position slide switches
+* Power Regualtor Circuit
+* LED Test Circuit
+** BOM
+** Circuit
+- GPIO(PWM): pin 32/33 <--> LED+ <--> Resistor <--> Ground
