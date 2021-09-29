@@ -19,3 +19,9 @@
 ** BOM
 ** Circuit
 - GPIO(PWM): pin 32/33 <--> LED+ <--> Resistor <--> Ground
+
+* Project 1
+- Implement algorithm, build the prototype board
+- Rotation of multiple sets of squares
+- Create trees to forest
+- 3D, transformation pipeline

@@ -6,7 +6,38 @@ import digitalio
 import adafruit_rgb_display.st7735 as st7735        # pylint: disable=unused-import
 from adafruit_rgb_display.rgb import color565
 
-from PIL import Image, ImageDraw
+def drawLine(display, x0, y0, x1, y1, color):
+    slope = abs(y1 - y0) > abs(x1 - x0)
+    if (slope):
+        swap(x0, y0)
+        swap(x1, y1)
+
+    if (x0 > x1):
+        swap(x0, x1)
+        swap(y0, y1)
+
+    dx = x1 - x0
+    dy = abs(y1 - y0)
+
+    err = dx / 2
+
+    ystep = 0
+
+    if (y0 < y1):
+        ystep = 1
+    else:
+        ystep = -1
+
+    for x0 in range(x0, x1):
+        if (slope):
+            display.pixel(y0, x0, color)
+        else:
+            display.pixel(x0, y0, color)
+
+        err -= dy;
+        if (err < 0):
+            y0 = y0 + ystep
+            err = err + dx
 
 # Configuration for CS and DC pins (these are PiTFT defaults):
 cs_pin = digitalio.DigitalInOut(board.CE0)
@@ -33,5 +64,4 @@ else:
 display.fill(0)
 # Draw a red pixel in the center.
 print(display.width, display.height)
-for x in range(display.width):
-    display.pixel(x, 3, color565(255, 0, 0))
+drawLine(display, 0, 0, display.widht, display.height, color565(255, 0, 0))
