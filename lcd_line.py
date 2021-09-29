@@ -29,10 +29,9 @@ else:
     height = display.height
 
 
-while True:
-    # Clear the display
-    display.fill(0)
-    # Draw a red pixel in the center.
-    display.pixel(display.width // 2, display.height // 2, color565(255, 0, 0))
-    # Pause 2 seconds.
-    time.sleep(5)
+# Clear the display
+display.fill(0)
+# Draw a red pixel in the center.
+print(display.width, display.height)
+for x in range(display.width):
+    display.pixel(x, 3, color565(255, 0, 0))
