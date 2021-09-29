@@ -6,15 +6,18 @@ import digitalio
 import adafruit_rgb_display.st7735 as st7735        # pylint: disable=unused-import
 from adafruit_rgb_display.rgb import color565
 
-def drawLine(display, x0, y0, x1, y1, color):
+
+def drawLine(display, p0, p1, color):
+    x0, y0 = p0
+    x1, y1 = p1
     slope = abs(y1 - y0) > abs(x1 - x0)
     if (slope):
-        swap(x0, y0)
-        swap(x1, y1)
+        x0, y0 = y0, x0
+        x1, y1 = y1, x1
 
     if (x0 > x1):
-        swap(x0, x1)
-        swap(y0, y1)
+        x0, x1 = x1, x0
+        y0, y1 = y1, y0
 
     dx = x1 - x0
     dy = abs(y1 - y0)
@@ -64,4 +67,6 @@ else:
 display.fill(0)
 # Draw a red pixel in the center.
 print(display.width, display.height)
-drawLine(display, 0, 0, display.widht, display.height, color565(255, 0, 0))
+# drawLine(display, (0, 40), (40, 40), color565(255, 0, 0))
+# drawLine(display, (0, 0), (display.width, display.height), color565(255, 0, 0))
+drawLine(display, (30, 0), (30, 90), color565(255, 0, 0))
