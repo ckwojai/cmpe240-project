@@ -1,9 +1,7 @@
 import time
-import random
 import board
-import displayio
 import digitalio
-import adafruit_rgb_display.st7735 as st7735        # pylint: disable=unused-import
+import adafruit_rgb_display.st7735 as st7735
 from adafruit_rgb_display.rgb import color565
 
 
@@ -92,12 +90,28 @@ else:
     height = display.height
 
 
-# Clear the display
-display.fill(0)
-# draw_line(display, (30, 0), (30, 90), color565(255, 0, 0))
+# Initial square of length 100 pixels in the middle of the board
 p1 = (114, 130)
 p2 = (14, 130)
 p3 = (14, 30)
 p4 = (114, 30)
 
-display.line(p1[0], p1[1])
+square_list = []
+scale = 0.8
+for i in range(20): # Transform 19 times (level 19)
+    if i==0:
+        nps = [p1, p2, p3, p4]
+    square_list.append(nps)
+    np1, np2, np3, np4 = nps
+    nps = transform_square(np1, np2, np3, np4, scale)
+
+# Clear the display
+display.fill(0)
+# Draw the square according to the 4 vertices in list, one by one
+for pts in square_list:
+    p1, p2, p3, p4 = pts
+    draw_square(display, p1, p2, p3, p4, color565(250, 0, 0))
+# Remove these squares (draw black) in reverse order
+for pts in reversed(square_list):
+    p1, p2, p3, p4 = pts
+    draw_square(display, p1, p2, p3, p4, color565(0, 0, 0))
