@@ -117,7 +117,7 @@ class st7735r_display:
         xp1 = self.width, self.height/2
         yp0 = self.width/2, 0
         yp1 = self.width/2, self.height
-        color = color565(0,250,0)
+        color = color565(250,0,0)
         self.draw_line(xp0, xp1, color)
         self.draw_line(yp0, yp1, color)
 
@@ -145,7 +145,7 @@ while (True):
     input_str = input("Please enter virtual coordinate separated by a comma: ")
     p = input_str.split(",")
     p = int(p[0]), int(p[1]) 
-    display.fill_square_around_pv(p, 6, color565(250,0,0))
+    display.fill_square_around_pv(p, 5, color565(0,250,0))
 
 # display.draw_pixel((0,0))
 # display.draw_pixel((159,0))
