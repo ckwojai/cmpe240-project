@@ -19,7 +19,7 @@ class vector_helper:
             raise ValueError("input virtual coordinate y out of bound of physical display")
         # Convertion
         xp = xv + m
-        yp = yv + n
+        yp = -yv + n
         return (xp, yp)
 
     @staticmethod
@@ -62,7 +62,7 @@ class st7735r_display:
             reset_pin = digitalio.DigitalInOut(board.D24)
 
         self.display = st7735.ST7735R(spi, rotation=0, cs=cs_pin, dc=dc_pin, rst=reset_pin, baudrate=baudrate) # Rotation doesn't work here
-        self.rotation = 0
+        self.rotation = rotation 
         self.width = width
         self.height = height
 
@@ -78,8 +78,8 @@ class st7735r_display:
             if x > x_max:
                 raise ValueError("pixel x coordinate out of bound in physical display")
             if y > y_max:
-                raise ValueError("pixel y coordinate out of bound in physical display")
-            display.pixel(x, y)
+                raise ValueError(f"pixel y coordinate {y_max} out of bound in physical display")
+            display.pixel(x, y, color)
         elif r == 0:
             if x > y_max:
                 raise ValueError("pixel x coordinate out of bound in physical display")
@@ -88,7 +88,7 @@ class st7735r_display:
             x, y = x_max-y, y_max-x
             display.pixel(x, y, color)
 
-    def draw_line(self, p0, p1, color):
+    def draw_line(self, p0, p1, color=color565(250,0,0)):
         x0, y0 = p0
         x1, y1 = p1
         x0 = int(x0)
@@ -145,9 +145,9 @@ class st7735r_display:
                 self.draw_pixel(tp, color)
     def draw_axis(self):
         xp0 = 0, self.height / 2
-        xp1 = self.width, self.height/2
+        xp1 = self.width-1, self.height/2
         yp0 = self.width/2, 0
-        yp1 = self.width/2, self.height
+        yp1 = self.width/2, self.height-1
         color = color565(250,0,0)
         self.draw_line(xp0, xp1, color)
         self.draw_line(yp0, yp1, color)
@@ -166,28 +166,46 @@ class st7735r_display:
         ltp = ((xp - square_len/2), (yp - square_len/2))
         self.fill_square(ltp, square_len, color)
 
-    def
-
 
 # Configuration for CS and DC pins (these are PiTFT defaults):
 
-display = st7735r_display()
+display = st7735r_display(width=128, height=160, rotation=1)
+dimension = display.width, display.height
 display.clear()
-display.draw_axis()
-while (True):
-    input_str = input("Please enter virtual coordinate separated by a comma: ")
-    p = input_str.split(",")
-    p = int(p[0]), int(p[1]) 
-    display.fill_square_around_pv(p, 5, color565(0,250,0))
+#display.draw_axis()
 
-# display.draw_pixel((0,0))
-# display.draw_pixel((159,0))
-# display.draw_pixel((159,127))
-# display.draw_pixel((0,127))
-# pp = display.virtual_to_physical_coordinate((0,0))
-# display.draw_pixel(pp)
-# display.fill_square_around_pv((0,0), 6, color565(250,0,0))
-# display.draw_axis()
-# display.fill_square_around_pv((10,10), 6, color565(250,0,0))
-# display.fill_square_around_pv((-40,40), 6, color565(250,0,0))
+parent_trunk_height = 40
+parent_root = (0,-79)
+parent_top = (parent_root[0], parent_root[1]+parent_trunk_height)
+branch_factor = 2
+branch_angle = [-30, 30]
+lines = []
 
+scale = 0.8
+level = 4
+root=parent_root
+top=parent_top
+
+for level in range(4):
+
+translated_top = vector_helper.translate_pt_on_line(root, top, scale, translate_pt=1)
+new_tops = [translated_top]
+for degree in branch_angle:
+    rotated_top = vector_helper.rotate_around_center(top, translated_top, degree)
+    new_tops.append(rotated_top)
+
+ptop = vector_helper.virtual_to_physical_coordinate(dimension, top)
+pnew_tops = list(map(lambda p: vector_helper.virtual_to_physical_coordinate((display.width, display.height), p), new_tops))
+for pnew_top in pnew_tops:
+    lines.append([ptop, pnew_top])
+
+for line in lines:
+    pa, py = line
+    display.draw_line(pa, py)
+
+print(parent_root)
+parent_root = vector_helper.virtual_to_physical_coordinate(dimension, parent_root)
+print(parent_root)
+parent_top = vector_helper.virtual_to_physical_coordinate(dimension, parent_top)
+
+display.draw_line(parent_root, parent_top)
