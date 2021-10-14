@@ -174,6 +174,20 @@ dimension = display.width, display.height
 display.clear()
 #display.draw_axis()
 
+
+def branch_tree(root, top, scale, branch_angle, lines):
+    translated_top = vector_helper.translate_pt_on_line(root, top, scale, translate_pt=1)
+    new_tops = [translated_top]
+    for degree in branch_angle:
+        rotated_top = vector_helper.rotate_around_center(top, translated_top, degree)
+        new_tops.append(rotated_top)
+
+    ptop = vector_helper.virtual_to_physical_coordinate(dimension, top)
+    pnew_tops = list(map(lambda p: vector_helper.virtual_to_physical_coordinate((display.width, display.height), p), new_tops))
+    for pnew_top in pnew_tops:
+        lines.append([ptop, pnew_top])
+    return top, new_tops
+
 parent_trunk_height = 40
 parent_root = (0,-79)
 parent_top = (parent_root[0], parent_root[1]+parent_trunk_height)
@@ -186,18 +200,14 @@ level = 4
 root=parent_root
 top=parent_top
 
+new_tops = [(root, [top])]
 for level in range(4):
+    next_new_tops = []
+    for root, tops in new_tops:
+        for top in tops:
+            next_new_tops.append(branch_tree(root, top, scale, branch_angle, lines))
+    new_tops = next_new_tops
 
-translated_top = vector_helper.translate_pt_on_line(root, top, scale, translate_pt=1)
-new_tops = [translated_top]
-for degree in branch_angle:
-    rotated_top = vector_helper.rotate_around_center(top, translated_top, degree)
-    new_tops.append(rotated_top)
-
-ptop = vector_helper.virtual_to_physical_coordinate(dimension, top)
-pnew_tops = list(map(lambda p: vector_helper.virtual_to_physical_coordinate((display.width, display.height), p), new_tops))
-for pnew_top in pnew_tops:
-    lines.append([ptop, pnew_top])
 
 for line in lines:
     pa, py = line
