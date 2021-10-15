@@ -1,10 +1,12 @@
 import time
+from warnings import warn
 import board
 import digitalio
 import adafruit_rgb_display.st7735 as st7735
 from adafruit_rgb_display.rgb import color565
 # from PIL import Image, ImageDraw, ImageFont
 from math import sin, cos, radians
+import random
 
 class vector_helper:
     @staticmethod
@@ -14,9 +16,9 @@ class vector_helper:
         m = max_x / 2
         n = max_y / 2
         if xv > m or xv < -m:
-            raise ValueError("input virtual coordinate x out of bound of physical display")
+            warn(f"input virtual coordinate x ({xv}) out of bound of physical display")
         if yv > n or yv < -n:
-            raise ValueError("input virtual coordinate y out of bound of physical display")
+            warn(f"input virtual coordinate y ({yv}) out of bound of physical display")
         # Convertion
         xp = xv + m
         yp = -yv + n
@@ -76,15 +78,19 @@ class st7735r_display:
         y_max = display.height - 1
         if r == 1:
             if x > x_max:
-                raise ValueError("pixel x coordinate out of bound in physical display")
+                warn(f"pixel coordinate x ({x}) out of bound in physical display")
+                return
             if y > y_max:
-                raise ValueError(f"pixel y coordinate {y_max} out of bound in physical display")
+                warn(f"pixel coordinate y ({y}) out of bound in physical display")
+                return
             display.pixel(x, y, color)
         elif r == 0:
             if x > y_max:
-                raise ValueError("pixel x coordinate out of bound in physical display")
+                warn(f"pixel coordinate x ({x}) out of bound in physical display")
+                return
             if y > x_max:
-                raise ValueError("pixel y coordinate out of bound in physical display")
+                warn(f"pixel coordinate y ({y}) out of bound in physical display")
+                return
             x, y = x_max-y, y_max-x
             display.pixel(x, y, color)
 
@@ -175,10 +181,10 @@ display.clear()
 #display.draw_axis()
 
 
-def branch_tree(root, top, scale, branch_angle, lines):
+def branch_tree(root, top, scale, branch_angles, lines):
     translated_top = vector_helper.translate_pt_on_line(root, top, scale, translate_pt=1)
     new_tops = [translated_top]
-    for degree in branch_angle:
+    for degree in branch_angles:
         rotated_top = vector_helper.rotate_around_center(top, translated_top, degree)
         new_tops.append(rotated_top)
 
@@ -188,34 +194,53 @@ def branch_tree(root, top, scale, branch_angle, lines):
         lines.append([ptop, pnew_top])
     return top, new_tops
 
-parent_trunk_height = 40
-parent_root = (0,-79)
-parent_top = (parent_root[0], parent_root[1]+parent_trunk_height)
-branch_factor = 2
-branch_angle = [-30, 30]
-lines = []
+def draw_tree(parent_root, parent_top, branch_factor=3, level=7, leave_on_level=3):
+    # Draw Tree Trunk
+    pparent_root = vector_helper.virtual_to_physical_coordinate(dimension, parent_root)
+    pparent_top = vector_helper.virtual_to_physical_coordinate(dimension, parent_top)
+    display.draw_line(pparent_root, pparent_top, color_brown)
 
-scale = 0.8
-level = 4
-root=parent_root
-top=parent_top
+    line_levels = []
+    new_tops = [(parent_root, [parent_top])]
+    for i in range(level):
+        lines = []
+        next_new_tops = []
+        for root, tops in new_tops:
+            for top in tops:
+                # Randomize lambda
+                scale = random.uniform(0.7, 0.9)
+                # Randomize branch_angle
+                branch_angles = [ random.uniform(-30, 30) for i in range(branch_factor-1)]
+                next_new_tops.append(branch_tree(root, top, scale, branch_angles, lines))
+        line_levels.append(lines)
+        new_tops = next_new_tops
 
-new_tops = [(root, [top])]
-for level in range(4):
-    next_new_tops = []
-    for root, tops in new_tops:
-        for top in tops:
-            next_new_tops.append(branch_tree(root, top, scale, branch_angle, lines))
-    new_tops = next_new_tops
+
+    for i, lines in enumerate(line_levels):
+        if i >= 3:
+            color = color_green
+        else:
+            color = color_brown
+        for line in lines:
+            pa, py = line
+            display.draw_line(pa, py, color)
 
 
-for line in lines:
-    pa, py = line
-    display.draw_line(pa, py)
+color_brown = color565(45, 82, 160)
+color_green = color565(0, 200, 0)
 
-print(parent_root)
-parent_root = vector_helper.virtual_to_physical_coordinate(dimension, parent_root)
-print(parent_root)
-parent_top = vector_helper.virtual_to_physical_coordinate(dimension, parent_top)
-
-display.draw_line(parent_root, parent_top)
+# Back Horizontal large tree 1
+height = 36
+parent_root = (0,-60)
+parent_top = (parent_root[0], parent_root[1]+36)
+draw_tree(parent_root, parent_top, level=8)
+# Front small left-leaning tree
+height = 10
+parent_root = (-5,-79)
+parent_top = (-20, -79+height)
+draw_tree(parent_root, parent_top, level=6)
+# Front medium right-leaning tree
+height = 15 
+parent_root = (15,-70)
+parent_top = (25, -60+height)
+draw_tree(parent_root, parent_top, level=7)
