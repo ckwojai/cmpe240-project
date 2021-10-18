@@ -3,8 +3,8 @@ import board
 import digitalio
 import adafruit_rgb_display.st7735 as st7735
 from adafruit_rgb_display.rgb import color565
-
-
+import random
+random.seed()
 def draw_line(display, p0, p1, color):
     x0, y0 = p0
     x1, y1 = p1
@@ -67,7 +67,17 @@ def transform_square(p1, p2, p3, p4, scale):
     n_p4 = translate_pt_on_line(p4, p1, scale)
     return n_p1, n_p2, n_p3, n_p4
 
+def generate_random_color():
+    return color565(random.randinit(0,250),random.randinit(0,250),random.randinit(0,250))
 
+def generate_square_location(bound):
+    max_x, max_y = bound
+    length = random.uniform(50,100)
+    ltp = random.uniform(0, max_x-length), random.uniform(0, max_y-length)
+    rtp = ltp[0]+length, ltp[1]
+    rbp = ltp[0]+length, ltp[1]+length
+    lbp = ltp[0], ltp[1]+length
+    return [ltp, rtp, rbp, lbp]
 
 # Configuration for CS and DC pins (these are PiTFT defaults):
 cs_pin = digitalio.DigitalInOut(board.CE0)
@@ -90,28 +100,22 @@ else:
     height = display.height
 
 
-# Initial square of length 100 pixels in the middle of the board
-p1 = (114, 130)
-p2 = (14, 130)
-p3 = (14, 30)
-p4 = (114, 30)
-
+nps = generate_square_location((128, 160))
 square_list = []
-scale = 0.8
-for i in range(20): # Transform 19 times (level 19)
-    if i==0:
-        nps = [p1, p2, p3, p4]
+for i in range(10): # Transform 19 times (level 19)
     square_list.append(nps)
     np1, np2, np3, np4 = nps
+    scale = random.uniform(0,2,0.8)
     nps = transform_square(np1, np2, np3, np4, scale)
+for pts in square_list:
+    p1, p2, p3, p4 = pts
+    draw_square(display, p1, p2, p3, p4, generate_random_color())
+# Remove these squares (draw black) in reverse order
+for pts in reversed(square_list):
+    p1, p2, p3, p4 = pts
+    draw_square(display, p1, p2, p3, p4, generate_random_color())
+time.sleep(1)
 
 # Clear the display
 display.fill(0)
 # Draw the square according to the 4 vertices in list, one by one
-for pts in square_list:
-    p1, p2, p3, p4 = pts
-    draw_square(display, p1, p2, p3, p4, color565(250, 0, 0))
-# Remove these squares (draw black) in reverse order
-for pts in reversed(square_list):
-    p1, p2, p3, p4 = pts
-    draw_square(display, p1, p2, p3, p4, color565(0, 0, 0))
