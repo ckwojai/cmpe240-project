@@ -32,19 +32,17 @@ int main() {
  
   // Pin Definitions 
   GPIO::setmode(GPIO::BOARD);
- 
-  // LED pin gets set to high initially
-  GPIO::setup(led_pin, GPIO::OUT, GPIO::HIGH);
   // Swtich pin as input
   GPIO:setup(switch_pin, GPIO::IN);
- 
+
+  // LED pin as output
+  int led_state = GPIO::LOW; // LED pin set to low initially
+  GPIO::setup(led_pin, GPIO::OUT, led_state;
+
   int prev_value = GPIO::input(switch_pin);
-  int led_state = GPIO::LOW;
-  GPIO::output(led_pin, led_state);
-  // Blink LED every 0.5 seconds
   while(!done) {
-    int curr_value = GPIO::input(switch_pin);
-    if (curr_value != prev_value) {
+    int curr_value = GPIO::input(switch_pin); // get state of switch
+    if (curr_value != prev_value) { // if state change, toggle the led
       led_state = led_state ? GPIO::LOW : GPIO::HIGH;
       GPIO::output(led_pin, led_state);
       prev_value = curr_value;
