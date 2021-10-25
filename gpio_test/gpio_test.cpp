@@ -36,12 +36,10 @@ int main() {
   // LED pin gets set to high initially
   GPIO::setup(led_pin, GPIO::OUT, GPIO::HIGH);
   // Swtich pin as input
-  GPIO:setup(switch_pin, GPIO::IN)
- 
-  std::cout << "Press CTRL+C to stop the LED" << std::endl;
+  GPIO:setup(switch_pin, GPIO::IN);
  
   int prev_value = GPIO::input(switch_pin);
-  int led_state = GPIO::HIGH;
+  int led_state = GPIO::LOW;
   GPIO::output(led_pin, led_state);
   // Blink LED every 0.5 seconds
   while(!done) {
