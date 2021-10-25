@@ -68,7 +68,7 @@ def transform_square(p1, p2, p3, p4, scale):
     return n_p1, n_p2, n_p3, n_p4
 
 def generate_random_color():
-    return color565(random.randinit(0,250),random.randinit(0,250),random.randinit(0,250))
+    return color565(random.randint(0,250),random.randint(0,250),random.randint(0,250))
 
 def generate_square_location(bound):
     max_x, max_y = bound
@@ -100,22 +100,23 @@ else:
     height = display.height
 
 
-nps = generate_square_location((128, 160))
-square_list = []
-for i in range(10): # Transform 19 times (level 19)
-    square_list.append(nps)
-    np1, np2, np3, np4 = nps
-    scale = random.uniform(0,2,0.8)
-    nps = transform_square(np1, np2, np3, np4, scale)
-for pts in square_list:
-    p1, p2, p3, p4 = pts
-    draw_square(display, p1, p2, p3, p4, generate_random_color())
-# Remove these squares (draw black) in reverse order
-for pts in reversed(square_list):
-    p1, p2, p3, p4 = pts
-    draw_square(display, p1, p2, p3, p4, generate_random_color())
-time.sleep(1)
+display.fill(0)
+for i in range(10):
+    nps = generate_square_location((128, 160))
+    square_list = []
+    for i in range(10): # Transform 19 times (level 19)
+        square_list.append(nps)
+        np1, np2, np3, np4 = nps
+        scale = random.uniform(0.2,0.8)
+        nps = transform_square(np1, np2, np3, np4, scale)
+    for pts in square_list:
+        p1, p2, p3, p4 = pts
+        draw_square(display, p1, p2, p3, p4, generate_random_color())
+    # Remove these squares (draw black) in reverse order
+    for pts in reversed(square_list):
+        p1, p2, p3, p4 = pts
+        draw_square(display, p1, p2, p3, p4, generate_random_color())
+    time.sleep(1)
 
 # Clear the display
-display.fill(0)
 # Draw the square according to the 4 vertices in list, one by one
