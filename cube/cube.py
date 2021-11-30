@@ -65,11 +65,23 @@ class vector_helper:
         pty = -cp*ct*pwx - cp*st*pwy + sp*pwz
         ptz = -sp*ct*pwx - sp*ct*pwy - cp*pwz + rho
         return (ptx,pty,ptz)
+
+    @staticmethod
     def perspective_projection(pt, D):
         ptx, pty, ptz = pt
         ppx = D*ptx/ptz
         ppy = D*pty/ptz
         return (ppx,ppy)
+
+    @staticmethod
+    def get_shadow_on_xy_plane(pc, pv):
+        pcx, pcy, pcz = pc
+        pvx, pvy, pvz = pv
+        lda = - pcz / (pvz - pcz)
+        psx = pcx + lda * (pvx-pcx)
+        psy = pcy + lda * (pvy-pcy)
+        psz = pcz + lda * (pvz-pcz)
+        return (psx, psy, psz)
 
 class st7735r_display:
     def __init__(self, spi=None, width=160, height=128, rotation=0, cs_pin=None, dc_pin=None, reset_pin=None, baudrate=24000000):
@@ -256,6 +268,13 @@ def draw_cube(display, cube, color):
     display.draw_line(p5, p6, color)
     display.draw_line(p6, p7, color)
 
+def draw_shadow(display, shadow, color):
+    p1, p2, p3, p4 = shadow
+    display.draw_line(p1, p2, color)
+    display.draw_line(p2, p3, color)
+    display.draw_line(p3, p4, color)
+    display.draw_line(p4, p1, color)
+
 color_brown = color565(45, 82, 160)
 color_green = color565(0, 200, 0)
 
@@ -269,8 +288,15 @@ p7 = (-25,25,25)
 cube_w = [p1, p2, p3, p4, p5, p6, p7]
 D = 100
 pv = (100,75,100)
+pl = (40, 60, 120)
 cube_v = [ vector_helper.world_to_viewer_transform(pw, pv) for pw in cube_w ]
 cube_p = [ vector_helper.perspective_projection(pv, D) for pv in cube_v ]
 cube_phy = [ vector_helper.virtual_to_physical_coordinate((128,160),pp) for pp in cube_p ]
 
 draw_cube(display, cube_phy, color_green)
+cube_s = [p1, p2, p5, p6]
+shadow_w = [ vector_helper.get_shadow_on_xy_plane(pc, pl) for pc in cube_s ]
+shadow_v = [ vector_helper.world_to_viewer_transform(pw, pv) for pw in shadow_w ]
+shadow_p = [ vector_helper.perspective_projection(pv, D) for pv in shadow_v ]
+shadow_phy = [ vector_helper.virtual_to_physical_coordinate((128,160),pp) for pp in shadow_p ]
+draw_shadow(display, shadow_phy, color_brown)
