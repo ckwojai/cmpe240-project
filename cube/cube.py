@@ -56,7 +56,7 @@ class vector_helper:
         pvx, pvy, pvz = pv
         pwx, pwy, pwz = pw
         rho = math.sqrt(pvx**2+pvy**2+pvz**2)
-        mu = math.sqrt(pvx**2+pyv**2)
+        mu = math.sqrt(pvx**2+pvy**2)
         st = pvy/mu
         ct = pvx/mu
         sp = mu/rho
@@ -194,7 +194,7 @@ class st7735r_display:
 
 # Configuration for CS and DC pins (these are PiTFT defaults):
 
-display = st7735r_display(width=128, height=160, rotation=1)
+display = st7735r_display(width=128, height=160, rotation=0)
 dimension = display.width, display.height
 display.clear()
 #display.draw_axis()
@@ -259,17 +259,18 @@ def draw_cube(display, cube, color):
 color_brown = color565(45, 82, 160)
 color_green = color565(0, 200, 0)
 
-p1 = (25,-25,25)
-p2 = (25,25,25)
-p3 = (25,25,-25)
-p4 = (25,-25,-25)
-p5 = (-25,-25,25)
-p6 = (-25,25,25)
-p7 = (-25,25,-25)
+p1 = (25,-25,75)
+p2 = (25,25,75)
+p3 = (25,25,25)
+p4 = (25,-25,25)
+p5 = (-25,-25,75)
+p6 = (-25,25,75)
+p7 = (-25,25,25)
 cube_w = [p1, p2, p3, p4, p5, p6, p7]
-D = 60
-pv = (100,100,100)
-cube_v = [ vector_helper.world_to_viewer_transfrom(pw, pv) for pw in cube_w ]
+D = 100
+pv = (100,75,100)
+cube_v = [ vector_helper.world_to_viewer_transform(pw, pv) for pw in cube_w ]
 cube_p = [ vector_helper.perspective_projection(pv, D) for pv in cube_v ]
+cube_phy = [ vector_helper.virtual_to_physical_coordinate((128,160),pp) for pp in cube_p ]
 
-draw_cube(display, cube, green)
+draw_cube(display, cube_phy, color_green)
