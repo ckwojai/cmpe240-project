@@ -288,15 +288,17 @@ p7 = (-25,25,25)
 cube_w = [p1, p2, p3, p4, p5, p6, p7]
 D = 100
 pv = (100,75,100)
-pl = (40, 60, 120)
+pl = (0, 0, 320)
 cube_v = [ vector_helper.world_to_viewer_transform(pw, pv) for pw in cube_w ]
 cube_p = [ vector_helper.perspective_projection(pv, D) for pv in cube_v ]
 cube_phy = [ vector_helper.virtual_to_physical_coordinate((128,160),pp) for pp in cube_p ]
 
 draw_cube(display, cube_phy, color_green)
-cube_s = [p1, p2, p5, p6]
+cube_s = [p1, p2, p6, p5]
 shadow_w = [ vector_helper.get_shadow_on_xy_plane(pc, pl) for pc in cube_s ]
 shadow_v = [ vector_helper.world_to_viewer_transform(pw, pv) for pw in shadow_w ]
 shadow_p = [ vector_helper.perspective_projection(pv, D) for pv in shadow_v ]
 shadow_phy = [ vector_helper.virtual_to_physical_coordinate((128,160),pp) for pp in shadow_p ]
+for p in shadow_w:
+    print(p)
 draw_shadow(display, shadow_phy, color_brown)
