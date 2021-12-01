@@ -7,6 +7,9 @@ from adafruit_rgb_display.rgb import color565
 from math import sin, cos, radians
 import random
 
+import numpy as np
+import mahotas
+
 import math
 class vector_helper:
     @staticmethod
@@ -268,12 +271,35 @@ def draw_cube(display, cube, color):
     display.draw_line(p5, p6, color)
     display.draw_line(p6, p7, color)
 
+def fill_polygon(display, poly, color):
+    def render(poly):
+        """Return polygon as grid of points inside polygon.
+
+        Input : poly (list of lists)
+        Output : output (list of lists)
+        """
+        xs, ys = zip(*poly)
+        minx, maxx = min(xs), max(xs)
+        miny, maxy = min(ys), max(ys)
+
+        newPoly = [(int(x - minx), int(y - miny)) for (x, y) in poly]
+
+        X = maxx - minx + 1
+        Y = maxy - miny + 1
+
+        grid = np.zeros((X, Y), dtype=np.int8)
+        mahotas.polygon.fill_polygon(newPoly, grid)
+
+        return [(x + minx, y + miny) for (x, y) in zip(*np.nonzero(grid))]
+    pts = render(poly)
+    for pt in pts:
+        display.draw_pixel(pt, color)
+
 def draw_shadow(display, shadow, color):
     p1, p2, p3, p4 = shadow
-    display.draw_line(p1, p2, color)
-    display.draw_line(p2, p3, color)
-    display.draw_line(p3, p4, color)
-    display.draw_line(p4, p1, color)
+    fill_polygon(display, shadow, color)
+
+
 
 color_brown = color565(45, 82, 160)
 color_green = color565(0, 200, 0)
@@ -299,6 +325,4 @@ shadow_w = [ vector_helper.get_shadow_on_xy_plane(pc, pl) for pc in cube_s ]
 shadow_v = [ vector_helper.world_to_viewer_transform(pw, pv) for pw in shadow_w ]
 shadow_p = [ vector_helper.perspective_projection(pv, D) for pv in shadow_v ]
 shadow_phy = [ vector_helper.virtual_to_physical_coordinate((128,160),pp) for pp in shadow_p ]
-for p in shadow_w:
-    print(p)
 draw_shadow(display, shadow_phy, color_brown)
