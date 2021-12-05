@@ -100,6 +100,13 @@ class vector_helper:
         return (ir, ig, ib)
 
     @staticmethod
+    def transform_world_to_viewer_to_physical(pw, pv, D, dimension):
+        p = vector_helper.world_to_viewer_transform(pw, pv)
+        pp = vector_helper.perspective_projection(p, D)
+        ppp = vector_helper.virtual_to_physical_coordinate(dimension,pp)
+        return ppp
+
+    @staticmethod
     def get_all_points_in_polygon(poly):
         """Return polygon as grid of points inside polygon.
 
@@ -256,16 +263,18 @@ def branch_tree(root, top, scale, branch_angles, lines):
         rotated_top = vector_helper.rotate_around_center(top, translated_top, degree)
         new_tops.append(rotated_top)
 
-    ptop = vector_helper.virtual_to_physical_coordinate(dimension, top)
-    pnew_tops = list(map(lambda p: vector_helper.virtual_to_physical_coordinate((display.width, display.height), p), new_tops))
-    for pnew_top in pnew_tops:
-        lines.append([ptop, pnew_top])
+    # ptop = vector_helper.virtual_to_physical_coordinate(dimension, top)
+    # pnew_tops = list(map(lambda p: vector_helper.virtual_to_physical_coordinate((display.width, display.height), p), new_tops))
+    for new_top in new_tops:
+        lines.append([top, new_top])
     return top, new_tops
 
-def draw_tree(parent_root, parent_top, branch_factor=3, level=7, leave_on_level=3):
+def draw_tree(parent_root, parent_top, pv, D, ranch_factor=3, level=7, dimension=(128,160)):
     # Draw Tree Trunk
-    pparent_root = vector_helper.virtual_to_physical_coordinate(dimension, parent_root)
-    pparent_top = vector_helper.virtual_to_physical_coordinate(dimension, parent_top)
+    parent_root = (parent_root[0], 25, parent_root[1])
+    parent_top = (parent_top[0], 25, parent_top[1])
+    pparent_root = vector_helper.transform_world_to_viewer_to_physical(parent_root, pv, D, dimension)
+    pparent_top = vector_helper.transform_world_to_viewer_to_physical(parent_top, pv, D, dimension)
     display.draw_line(pparent_root, pparent_top, color_brown)
 
     line_levels = []
@@ -291,7 +300,11 @@ def draw_tree(parent_root, parent_top, branch_factor=3, level=7, leave_on_level=
             color = color_brown
         for line in lines:
             pa, py = line
-            display.draw_line(pa, py, color)
+            pa = (pa[0], 25, pa[1])
+            py = (py[0], 25, pa[1])
+            ppa = vector_helper.transform_world_to_viewer_to_physical(pa, pv, D, dimension)
+            ppy = vector_helper.transform_world_to_viewer_to_physical(pa, pv, D, dimension)
+            display.draw_line(ppa, ppy, color)
 
 def draw_cube(display, cube, color):
     p1, p2, p3, p4, p5, p6, p7 = cube
@@ -368,3 +381,8 @@ top_phy = [cube_phy[0], cube_phy[1], cube_phy[5], cube_phy[4]]
 top_phy = [(int(p[0]), int(p[1])) for p in top_phy]
 kd = (0.8, 0, 0)
 draw_top_with_diffusion(display, top_w, top_phy, pl, kd)
+
+height = 36
+parent_root = (0,-60)
+parent_top = (parent_root[0], parent_root[1]+36)
+draw_tree(parent_root, parent_top, level=8)
