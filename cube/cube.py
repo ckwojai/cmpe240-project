@@ -315,13 +315,13 @@ def draw_top_with_diffusion(display, top_w, top_phy, pl, kd):
     pts = vector_helper.get_all_points_in_polygon(top_phy)
     for pt in pts:
         intensity_map[pt] = intensity_f(pt[0], pt[1])
-    min_intensity = min(intensity_map.values())
-    max_intensity = max(intensity_map.values())
+    min_intensity = min(intensity_map.values())[0]
+    max_intensity = max(intensity_map.values())[0]
     color_f = interpolate.interp1d([min_intensity, max_intensity], [20, 255])
     for pt in pts:
-        color_map[pt] = color_f(intensity_map[pt])
+        color_map[pt] = int(color_f(intensity_map[pt])[0])
     for pt, red in color_map.items():
-        color = color565(red, 0, 0)
+        color = color565(0, 0, red)
         display.draw_pixel(pt, color)
 
 def fill_polygon(display, poly, color):
@@ -361,5 +361,10 @@ shadow_v = [ vector_helper.world_to_viewer_transform(pw, pv) for pw in shadow_w 
 shadow_p = [ vector_helper.perspective_projection(pv, D) for pv in shadow_v ]
 shadow_phy = [ vector_helper.virtual_to_physical_coordinate((128,160),pp) for pp in shadow_p ]
 shadow_phy = [(int(p[0]), int(p[1])) for p in shadow_phy]
-draw_shadow(display, shadow_phy, color_shadow)
+#draw_shadow(display, shadow_phy, color_shadow)
 draw_cube(display, cube_phy, color_green)
+top_w = [p1, p2, p6, p5]
+top_phy = [cube_phy[0], cube_phy[1], cube_phy[5], cube_phy[4]]
+top_phy = [(int(p[0]), int(p[1])) for p in top_phy]
+kd = (0.8, 0, 0)
+draw_top_with_diffusion(display, top_w, top_phy, pl, kd)
