@@ -10,6 +10,8 @@ import random
 import numpy as np
 import mahotas
 
+from scipy import interpolate
+
 import math
 class vector_helper:
     @staticmethod
@@ -77,14 +79,46 @@ class vector_helper:
         return (ppx,ppy)
 
     @staticmethod
-    def get_shadow_on_xy_plane(pc, pv):
+    def get_shadow_on_xy_plane(pc, pl):
         pcx, pcy, pcz = pc
-        pvx, pvy, pvz = pv
-        lda = - pcz / (pvz - pcz)
-        psx = pcx + lda * (pvx-pcx)
-        psy = pcy + lda * (pvy-pcy)
-        psz = pcz + lda * (pvz-pcz)
+        plx, ply, plz = pl
+        lda = - pcz / (plz - pcz)
+        psx = pcx + lda * (plx-pcx)
+        psy = pcy + lda * (ply-pcy)
+        psz = pcz + lda * (plz-pcz)
         return (psx, psy, psz)
+
+    @staticmethod
+    def get_diffusion_intensity(pc, pl, kd):
+        kd_r, kd_g, kd_b = kd
+        pcx, pcy, pcz = pc
+        plx, ply, plz = pl
+        rx, ry, rz = (plx-pcx, ply-pcy, plz-pcz)
+        ca = rz / math.sqrt(rx**2+ry**2+rz**2)
+        i = ca / (rx**2+ry**2+rz**2)
+        ir, ig, ib = kd_r*i, kd_g*i, kd_b*i
+        return (ir, ig, ib)
+
+    @staticmethod
+    def get_all_points_in_polygon(poly):
+        """Return polygon as grid of points inside polygon.
+
+        Input : poly (list of lists)
+        Output : output (list of lists)
+        """
+        xs, ys = zip(*poly)
+        minx, maxx = min(xs), max(xs)
+        miny, maxy = min(ys), max(ys)
+
+        newPoly = [(int(x - minx), int(y - miny)) for (x, y) in poly]
+
+        X = maxx - minx + 1
+        Y = maxy - miny + 1
+
+        grid = np.zeros((X, Y), dtype=np.int8)
+        mahotas.polygon.fill_polygon(newPoly, grid)
+
+        return [(x + minx, y + miny) for (x, y) in zip(*np.nonzero(grid))]
 
 class st7735r_display:
     def __init__(self, spi=None, width=160, height=128, rotation=0, cs_pin=None, dc_pin=None, reset_pin=None, baudrate=24000000):
@@ -271,27 +305,27 @@ def draw_cube(display, cube, color):
     display.draw_line(p5, p6, color)
     display.draw_line(p6, p7, color)
 
+def draw_top_with_diffusion(display, top_w, top_phy, pl, kd):
+    intensity = []
+    intensity_map = {}
+    color_map = {}
+    for p_w in top_w:
+        intensity.append(vector_helper.get_diffusion_intensity(p_w, pl, kd)[0])
+    intensity_f = interpolate.interp2d([c[0] for c in top_phy], [c[1] for c in top_phy], intensity)
+    pts = vector_helper.get_all_points_in_polygon(top_phy)
+    for pt in pts:
+        intensity_map[pt] = intensity_f(pt[0], pt[1])
+    min_intensity = min(intensity_map.values())
+    max_intensity = max(intensity_map.values())
+    color_f = interpolate.interp1d([min_intensity, max_intensity], [20, 255])
+    for pt in pts:
+        color_map[pt] = color_f(intensity_map[pt])
+    for pt, red in color_map.items():
+        color = color565(red, 0, 0)
+        display.draw_pixel(pt, color)
+
 def fill_polygon(display, poly, color):
-    def render(poly):
-        """Return polygon as grid of points inside polygon.
-
-        Input : poly (list of lists)
-        Output : output (list of lists)
-        """
-        xs, ys = zip(*poly)
-        minx, maxx = min(xs), max(xs)
-        miny, maxy = min(ys), max(ys)
-
-        newPoly = [(int(x - minx), int(y - miny)) for (x, y) in poly]
-
-        X = maxx - minx + 1
-        Y = maxy - miny + 1
-
-        grid = np.zeros((X, Y), dtype=np.int8)
-        mahotas.polygon.fill_polygon(newPoly, grid)
-
-        return [(x + minx, y + miny) for (x, y) in zip(*np.nonzero(grid))]
-    pts = render(poly)
+    pts = vector_helper.get_all_points_in_polygon(poly)
     for pt in pts:
         display.draw_pixel(pt, color)
 
