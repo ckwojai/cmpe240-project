@@ -269,12 +269,12 @@ def branch_tree(root, top, scale, branch_angles, lines):
         lines.append([top, new_top])
     return top, new_tops
 
-def draw_tree(parent_root, parent_top, pv, D, ranch_factor=3, level=7, dimension=(128,160)):
+def draw_tree(parent_root, parent_top, pv, D, branch_factor=3, level=7, dimension=(128,160)):
     # Draw Tree Trunk
-    parent_root = (parent_root[0], 25, parent_root[1])
-    parent_top = (parent_top[0], 25, parent_top[1])
-    pparent_root = vector_helper.transform_world_to_viewer_to_physical(parent_root, pv, D, dimension)
-    pparent_top = vector_helper.transform_world_to_viewer_to_physical(parent_top, pv, D, dimension)
+    pparent_root = (25, parent_root[0], parent_root[1])
+    pparent_top = (25, parent_top[0],  parent_top[1])
+    pparent_root = vector_helper.transform_world_to_viewer_to_physical(pparent_root, pv, D, dimension)
+    pparent_top = vector_helper.transform_world_to_viewer_to_physical(pparent_top, pv, D, dimension)
     display.draw_line(pparent_root, pparent_top, color_brown)
 
     line_levels = []
@@ -287,23 +287,23 @@ def draw_tree(parent_root, parent_top, pv, D, ranch_factor=3, level=7, dimension
                 # Randomize lambda
                 scale = random.uniform(0.7, 0.9)
                 # Randomize branch_angle
-                branch_angles = [ random.uniform(-30, 30) for i in range(branch_factor-1)]
+                branch_angles = [ random.uniform(-60, 60) for i in range(branch_factor-1)]
                 next_new_tops.append(branch_tree(root, top, scale, branch_angles, lines))
         line_levels.append(lines)
         new_tops = next_new_tops
 
 
     for i, lines in enumerate(line_levels):
-        if i >= 3:
+        if i >= 1:
             color = color_green
         else:
             color = color_brown
         for line in lines:
             pa, py = line
-            pa = (pa[0], 25, pa[1])
-            py = (py[0], 25, pa[1])
+            pa = (25, pa[0], pa[1])
+            py = (25, py[0], py[1])
             ppa = vector_helper.transform_world_to_viewer_to_physical(pa, pv, D, dimension)
-            ppy = vector_helper.transform_world_to_viewer_to_physical(pa, pv, D, dimension)
+            ppy = vector_helper.transform_world_to_viewer_to_physical(py, pv, D, dimension)
             display.draw_line(ppa, ppy, color)
 
 def draw_cube(display, cube, color):
@@ -350,19 +350,21 @@ def draw_shadow(display, shadow, color):
 
 color_brown = color565(45, 82, 160)
 color_green = color565(0, 200, 0)
+color_blue = color565(200, 0, 0)
+color_white = color565(255, 255, 255)
 color_shadow = color565(105,105,105)
 
-p1 = (25,-25,100)
-p2 = (25,25,100)
-p3 = (25,25,50)
-p4 = (25,-25,50)
-p5 = (-25,-25,100)
-p6 = (-25,25,100)
-p7 = (-25,25,50)
+p1 = (25,-25,60)
+p2 = (25,25,60)
+p3 = (25,25,10)
+p4 = (25,-25,10)
+p5 = (-25,-25,60)
+p6 = (-25,25,60)
+p7 = (-25,25,10)
 cube_w = [p1, p2, p3, p4, p5, p6, p7]
-D = 100
-pv = (100,75,150)
-pl = (0, 0, 320)
+D = 150
+pv = (100,75,100)
+pl = (0, -70, 320)
 # pl = (60, -60, 320)
 cube_v = [ vector_helper.world_to_viewer_transform(pw, pv) for pw in cube_w ]
 cube_p = [ vector_helper.perspective_projection(pv, D) for pv in cube_v ]
@@ -374,15 +376,15 @@ shadow_v = [ vector_helper.world_to_viewer_transform(pw, pv) for pw in shadow_w 
 shadow_p = [ vector_helper.perspective_projection(pv, D) for pv in shadow_v ]
 shadow_phy = [ vector_helper.virtual_to_physical_coordinate((128,160),pp) for pp in shadow_p ]
 shadow_phy = [(int(p[0]), int(p[1])) for p in shadow_phy]
-#draw_shadow(display, shadow_phy, color_shadow)
-draw_cube(display, cube_phy, color_green)
+draw_shadow(display, shadow_phy, color_shadow)
+draw_cube(display, cube_phy, color_blue)
 top_w = [p1, p2, p6, p5]
 top_phy = [cube_phy[0], cube_phy[1], cube_phy[5], cube_phy[4]]
 top_phy = [(int(p[0]), int(p[1])) for p in top_phy]
 kd = (0.8, 0, 0)
 draw_top_with_diffusion(display, top_w, top_phy, pl, kd)
 
-height = 36
-parent_root = (0,-60)
-parent_top = (parent_root[0], parent_root[1]+36)
-draw_tree(parent_root, parent_top, level=8)
+height = 14 
+parent_root = (0,10)
+parent_top = (parent_root[0], parent_root[1]+height)
+draw_tree(parent_root, parent_top, pv, D, level=2, branch_factor=10)
