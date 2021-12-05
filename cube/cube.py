@@ -269,7 +269,7 @@ def branch_tree(root, top, scale, branch_angles, lines):
         lines.append([top, new_top])
     return top, new_tops
 
-def draw_tree(parent_root, parent_top, pv, D, branch_factor=3, level=7, dimension=(128,160)):
+def draw_tree(display, parent_root, parent_top, pv, D, branch_factor=3, level=7, dimension=(128,160)):
     # Draw Tree Trunk
     pparent_root = (25, parent_root[0], parent_root[1])
     pparent_top = (25, parent_top[0],  parent_top[1])
@@ -346,7 +346,25 @@ def draw_shadow(display, shadow, color):
     p1, p2, p3, p4 = shadow
     fill_polygon(display, shadow, color)
 
-
+def draw_initials(display, color, pv, D, dimension=(128,160)):
+    lines = []
+    # K
+    lines.append([(15, 45), (15, 56)])
+    lines.append([(15, 52), (9, 56)])
+    lines.append([(15, 52), (6, 45)])
+    # C
+    lines.append([(-6, 45), (-6, 56)])
+    lines.append([(-6, 45), (-15, 45)])
+    lines.append([(-6, 56), (-15, 56)])
+    lines.append([(-15, 48), (-15, 45)])
+    lines.append([(-15, 53), (-15, 56)])
+    for line in lines:
+        pa, pb = line
+        pa = (25, pa[0], pa[1])
+        py = (25, pb[0], pb[1])
+        ppa = vector_helper.transform_world_to_viewer_to_physical(pa, pv, D, dimension)
+        ppy = vector_helper.transform_world_to_viewer_to_physical(py, pv, D, dimension)
+        display.draw_line(ppa, ppy, color)
 
 color_brown = color565(45, 82, 160)
 color_green = color565(0, 200, 0)
@@ -384,7 +402,8 @@ top_phy = [(int(p[0]), int(p[1])) for p in top_phy]
 kd = (0.8, 0, 0)
 draw_top_with_diffusion(display, top_w, top_phy, pl, kd)
 
-height = 14 
+height = 13 
 parent_root = (0,10)
 parent_top = (parent_root[0], parent_root[1]+height)
-draw_tree(parent_root, parent_top, pv, D, level=2, branch_factor=10)
+draw_tree(display, parent_root, parent_top, pv, D, level=2, branch_factor=10)
+draw_initials(display, color_white, pv, D)
