@@ -149,8 +149,8 @@ class st7735r_display:
         r = self.rotation
 
         (x, y) = int(p[0]), int(p[1])
-        x_max = display.width - 1
-        y_max = display.height - 1
+        x_max = self.width - 1
+        y_max = self.height - 1
         if r == 1:
             if x > x_max:
                 warn(f"pixel coordinate x ({x}) out of bound in physical display")
@@ -160,13 +160,13 @@ class st7735r_display:
                 return
             display.pixel(x, y, color)
         elif r == 0:
-            if x > y_max:
+            if x > x_max:
                 warn(f"pixel coordinate x ({x}) out of bound in physical display")
                 return
-            if y > x_max:
+            if y > y_max:
                 warn(f"pixel coordinate y ({y}) out of bound in physical display")
                 return
-            x, y = x_max-y, y_max-x
+            x, y = y_max-y, x
             display.pixel(x, y, color)
 
     def draw_line(self, p0, p1, color=color565(250,0,0)):
@@ -248,12 +248,6 @@ class st7735r_display:
         self.fill_square(ltp, square_len, color)
 
 
-# Configuration for CS and DC pins (these are PiTFT defaults):
-
-display = st7735r_display(width=128, height=160, rotation=0)
-dimension = display.width, display.height
-display.clear()
-#display.draw_axis()
 
 
 def branch_tree(root, top, scale, branch_angles, lines):
@@ -270,9 +264,11 @@ def branch_tree(root, top, scale, branch_angles, lines):
     return top, new_tops
 
 def draw_tree(display, parent_root, parent_top, pv, D, branch_factor=3, level=7, dimension=(128,160)):
+    def convert_2d_to_3d(p2d, const):
+        return (p2d[0], const, p2d[1])
     # Draw Tree Trunk
-    pparent_root = (25, parent_root[0], parent_root[1])
-    pparent_top = (25, parent_top[0],  parent_top[1])
+    pparent_root = convert_2d_to_3d(parent_root, 25)
+    pparent_top = convert_2d_to_3d(parent_top, 25)
     pparent_root = vector_helper.transform_world_to_viewer_to_physical(pparent_root, pv, D, dimension)
     pparent_top = vector_helper.transform_world_to_viewer_to_physical(pparent_top, pv, D, dimension)
     display.draw_line(pparent_root, pparent_top, color_brown)
@@ -300,8 +296,8 @@ def draw_tree(display, parent_root, parent_top, pv, D, branch_factor=3, level=7,
             color = color_brown
         for line in lines:
             pa, py = line
-            pa = (25, pa[0], pa[1])
-            py = (25, py[0], py[1])
+            pa = convert_2d_to_3d(pa, 25) 
+            py = convert_2d_to_3d(py, 25)
             ppa = vector_helper.transform_world_to_viewer_to_physical(pa, pv, D, dimension)
             ppy = vector_helper.transform_world_to_viewer_to_physical(py, pv, D, dimension)
             display.draw_line(ppa, ppy, color)
@@ -347,24 +343,34 @@ def draw_shadow(display, shadow, color):
     fill_polygon(display, shadow, color)
 
 def draw_initials(display, color, pv, D, dimension=(128,160)):
+    def convert_2d_to_3d(p2d, const):
+        return (const, p2d[0], p2d[1])
     lines = []
     # K
-    lines.append([(15, 45), (15, 56)])
-    lines.append([(15, 52), (9, 56)])
-    lines.append([(15, 52), (6, 45)])
+    lines.append([(-15, 40), (-15, 56)])
+    lines.append([(-15, 48), (-3, 56)])
+    lines.append([(-15, 48), (-3, 40)])
     # C
-    lines.append([(-6, 45), (-6, 56)])
-    lines.append([(-6, 45), (-15, 45)])
-    lines.append([(-6, 56), (-15, 56)])
-    lines.append([(-15, 48), (-15, 45)])
-    lines.append([(-15, 53), (-15, 56)])
+    lines.append([(6, 40), (6, 56)])
+    lines.append([(6, 40), (15, 40)])
+    lines.append([(6, 56), (15, 56)])
+    lines.append([(15, 56), (15, 52)])
+    lines.append([(15, 40), (15, 44)])
     for line in lines:
         pa, pb = line
-        pa = (25, pa[0], pa[1])
-        py = (25, pb[0], pb[1])
+        pa = convert_2d_to_3d(pa, 25) 
+        pb = convert_2d_to_3d(pb, 25) 
         ppa = vector_helper.transform_world_to_viewer_to_physical(pa, pv, D, dimension)
-        ppy = vector_helper.transform_world_to_viewer_to_physical(py, pv, D, dimension)
-        display.draw_line(ppa, ppy, color)
+        ppb = vector_helper.transform_world_to_viewer_to_physical(pb, pv, D, dimension)
+        display.draw_line(ppb, ppa, color)
+
+# Configuration for CS and DC pins (these are PiTFT defaults):
+width = 160
+height = 128
+dimension = (width, height)
+display = st7735r_display(width=width, height=height, rotation=0)
+dimension = display.width, display.height
+display.clear()
 
 color_brown = color565(45, 82, 160)
 color_green = color565(0, 200, 0)
@@ -380,30 +386,30 @@ p5 = (-25,-25,60)
 p6 = (-25,25,60)
 p7 = (-25,25,10)
 cube_w = [p1, p2, p3, p4, p5, p6, p7]
-D = 150
-pv = (100,75,100)
-pl = (0, -70, 320)
+D = 125 
+pv = (80, 100, 100)
+pl = (-100, 0, 320)
 # pl = (60, -60, 320)
 cube_v = [ vector_helper.world_to_viewer_transform(pw, pv) for pw in cube_w ]
 cube_p = [ vector_helper.perspective_projection(pv, D) for pv in cube_v ]
-cube_phy = [ vector_helper.virtual_to_physical_coordinate((128,160),pp) for pp in cube_p ]
+cube_phy = [ vector_helper.virtual_to_physical_coordinate(dimension, pp) for pp in cube_p ]
 
 cube_s = [p1, p2, p6, p5]
 shadow_w = [ vector_helper.get_shadow_on_xy_plane(pc, pl) for pc in cube_s ]
 shadow_v = [ vector_helper.world_to_viewer_transform(pw, pv) for pw in shadow_w ]
 shadow_p = [ vector_helper.perspective_projection(pv, D) for pv in shadow_v ]
-shadow_phy = [ vector_helper.virtual_to_physical_coordinate((128,160),pp) for pp in shadow_p ]
+shadow_phy = [ vector_helper.virtual_to_physical_coordinate(dimension, pp) for pp in shadow_p ]
 shadow_phy = [(int(p[0]), int(p[1])) for p in shadow_phy]
-draw_shadow(display, shadow_phy, color_shadow)
-draw_cube(display, cube_phy, color_blue)
 top_w = [p1, p2, p6, p5]
 top_phy = [cube_phy[0], cube_phy[1], cube_phy[5], cube_phy[4]]
 top_phy = [(int(p[0]), int(p[1])) for p in top_phy]
 kd = (0.8, 0, 0)
-draw_top_with_diffusion(display, top_w, top_phy, pl, kd)
 
-height = 13 
+height = 17 
 parent_root = (0,10)
 parent_top = (parent_root[0], parent_root[1]+height)
-draw_tree(display, parent_root, parent_top, pv, D, level=2, branch_factor=10)
-draw_initials(display, color_white, pv, D)
+draw_shadow(display, shadow_phy, color_shadow)
+draw_cube(display, cube_phy, color_blue)
+draw_tree(display, parent_root, parent_top, pv, D, level=2, branch_factor=10, dimension=dimension)
+draw_top_with_diffusion(display, top_w, top_phy, pl, kd)
+draw_initials(display, color_white, pv, D, dimension=dimension)
